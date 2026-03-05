@@ -317,6 +317,7 @@ def score_candidates(
     max_spread = cfg["max_spread_cents"]
     price_min = cfg["price_band_min_cents"]
     price_max = cfg["price_band_max_cents"]
+    min_volume = cfg["min_volume"]
     
     candidates = []
     
@@ -324,6 +325,8 @@ def score_candidates(
         if not b.parseable:
             continue
         if b.contract_id not in probs:
+            continue
+        if b.volume < min_volume:
             continue
         
         p_yes = probs[b.contract_id]

@@ -167,12 +167,11 @@ class BaseModel(ABC):
         """Create a trading signal with sizing caps applied."""
         self._last_sizing_note = ""
 
-        if direction == "yes":
-            edge = model_prob - market_prob
-            kelly = self.kelly_criterion(model_prob, market_prob)
-        else:  # "no"
-            edge = (1 - model_prob) - (1 - market_prob)
-            kelly = self.kelly_criterion(1 - model_prob, 1 - market_prob)
+        # model_prob / market_prob are the probability of the selected side
+        # (YES if direction=yes, NO if direction=no).
+        # Keep edge + Kelly on that same side to avoid sign inversions for NO.
+        edge = model_prob - market_prob
+        kelly = self.kelly_criterion(model_prob, market_prob)
 
         size = self.recommended_bet_size(kelly)
         sizing_note = getattr(self, "_last_sizing_note", "")
