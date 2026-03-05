@@ -1,0 +1,16 @@
+# Secrets
+config.json
+keys/
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.pyc
+
+# State
+ledger_state.json
+*.jsonl
+
+# OS
+.DS_Store

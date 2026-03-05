@@ -1,0 +1,82 @@
+Unparseable contract: NFP-WEIRD — Will the economy add jobs? March 2026 report
+
+=== Test 1: Title Parsing ===
+  ✅ "Nonfarm payrolls above 150K" → GT 150,000
+  ✅ "above 200,000 jobs" → GT 200,000
+  ✅ "200K or more" → GT 200,000
+  ✅ "at least 175k" → GT 175,000
+  ✅ "Less than 100K jobs" → LT 100,000
+  ✅ "below 50,000" → LT 50,000
+  ✅ "Under 200K nonfarm payrolls" → LT 200,000
+  ✅ "Between 100K and 150K jobs added" → BETWEEN 100,000
+  ✅ "150K–200K jobs added" → BETWEEN 150,000
+  ✅ "100,000 to 150,000" → BETWEEN 100,000
+  ✅ Unparseable returns None
+
+=== Test 2: Standard Contract Parsing ===
+  ✅ Parsed 8 brackets
+  ✅ All parseable
+  ✅ Thresholds extracted
+  ✅ All GT direction
+
+=== Test 3: Varied Format Parsing ===
+  ✅ Parseable: 7/8
+  ✅ NFP-WEIRD is unparseable
+  ✅ Structured field parsed
+  ✅ Range parsed (between)
+  ✅ Range parsed (dash)
+
+=== Test 4: Probability Computation ===
+  ✅ 8 probabilities computed
+  ✅ Probabilities are monotonically decreasing
+  ✅ P(>50K) > 90%
+  ✅ P(>300K) < 20%
+  ✅ P(>50K) <= 0.95 (cap)
+  ✅ P(>300K) >= 0.02 (floor)
+  ✅ Higher mu → higher P(>200K)
+  ✅ Lower mu → lower P(>200K)
+
+=== Test 5: Candidate Scoring ===
+  ✅ Candidates generated
+  ✅ All candidates have positive EV
+  ✅ All candidates within spread limit
+  ✅ Sorted by score (best first)
+
+=== Test 6: Full Pipeline ===
+  ✅ At least 1 candidate selected (or 0 if all gated)
+  ✅ Selected has positive edge
+  ✅ Selected has positive EV
+       → BUY YES KXNFP-26MAR07-T250 @ 16¢ | P(yes)=22.2% vs mkt 16.0% | EV=+5.2¢ | spread=3¢
+  ✅ Stable output (same input → same pick)
+  ✅ Different mu → potentially different bracket
+
+=== Test 7: Consensus Hybrid ===
+  ✅ 50/50 blend
+  ✅ 100% model
+  ✅ 100% consensus
+  ✅ No consensus → model only
+
+=== Test 8: Stale Market Guard ===
+  ✅ Same contracts (diff order) → same hash
+  ✅ Different contracts → different hash
+  ✅ Hash is 16 chars
+
+══════════════════════════════════════════════════
+  Results: 44 passed, 0 failed
+══════════════════════════════════════════════════
+
+---
+INFO: Bracket selector: model_mu=195,000, consensus_mu=190000.0, hybrid_mu=192,500, sigma=75,000, brackets=8
+INFO: Selected #1: BUY YES KXNFP-26MAR07-T250 @ 16¢ | P(yes)=22.2% vs mkt 16.0% | EV=+5.2¢ | spread=3¢
+================================================================
+  BRACKET SELECTOR — Test Mode
+================================================================
+
+  Loaded 8 contracts from fixture
+
+  Model μ: 195,000
+  Model σ: 75,000
+  Consensus: 190000.0
+
+  ✅ BUY YES KXNFP-26MAR07-T250 @ 16¢ | P(yes)=22.2% vs mkt 16.0% | EV=+5.2¢ | spread=3¢
+
