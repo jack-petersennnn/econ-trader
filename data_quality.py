@@ -12,16 +12,15 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 # Staleness thresholds
-MAX_STALE_MONTHLY = 7   # days - for monthly indicators
-MAX_STALE_WEEKLY = 2    # days - for weekly indicators
-MAX_STALE_DAILY = 1     # days - for daily indicators
+MAX_STALE_MONTHLY = 45  # days - monthly indicators can be 30-40 days old legitimately
+MAX_STALE_WEEKLY = 10   # days - for weekly indicators
+MAX_STALE_DAILY = 3     # days - for daily indicators
 
 # Critical features per model - if ANY critical feature fails, NO TRADE
 CRITICAL_FEATURES = {
     "nfp": {
-        "adp": {"series": "NPPTTL", "frequency": "monthly", "label": "ADP Employment"},
+        "adp": {"series": "ADPMNUSNERSA", "frequency": "monthly", "label": "ADP Employment"},
         "initial_claims": {"series": "ICSA", "frequency": "weekly", "label": "Initial Jobless Claims"},
-        "ism_svc_employment": {"series": "NMFBSI", "frequency": "monthly", "label": "ISM Services Employment"},
     },
     "cpi": {
         "shelter": {"series": "CUSR0000SAH1", "frequency": "monthly", "label": "Shelter CPI"},
@@ -38,11 +37,10 @@ CRITICAL_FEATURES = {
 OPTIONAL_FEATURES = {
     "nfp": {
         "continued_claims": {"series": "CCSA", "frequency": "weekly", "label": "Continued Claims"},
-        "ism_mfg_employment": {"series": "NAPMEI", "frequency": "monthly", "label": "ISM Mfg Employment"},
+        "regional_fed_empire": {"series": "GACDISA066MSFRBNY", "frequency": "monthly", "label": "Empire State Mfg"},
+        "regional_fed_philly": {"series": "GACDFSA066MSFRBPHI", "frequency": "monthly", "label": "Philly Fed Mfg"},
         "temp_help": {"series": "TEMPHELPS", "frequency": "monthly", "label": "Temp Help Services"},
-        "consumer_confidence": {"series": "CSCICP03USM665S", "frequency": "monthly", "label": "Consumer Confidence"},
-        "michigan_sentiment": {"series": "UMCSENT", "frequency": "monthly", "label": "UMich Sentiment"},
-        "challenger_cuts": {"series": "ICNSA", "frequency": "monthly", "label": "Challenger Cuts"},
+        "consumer_confidence": {"series": "USACSCICP02STSAM", "frequency": "monthly", "label": "Consumer Confidence (OECD)"},
     },
     "cpi": {
         "food": {"series": "CPIUFDSL", "frequency": "monthly", "label": "Food CPI"},

@@ -1,0 +1,248 @@
+[
+  {
+    "timestamp": "2026-03-07T17:23:27.167818-05:00",
+    "model": "nfp",
+    "raw_features": {},
+    "intermediate_values": {
+      "data_quality": {
+        "passed": false,
+        "report": [
+          {
+            "name": "adp",
+            "label": "ADP Employment",
+            "series": "NPPTTL",
+            "status": "stale",
+            "value": 129256.098,
+            "date": "2022-05-01",
+            "age_days": 1406,
+            "max_age_days": 7,
+            "message": "ADP Employment stale (1406 days old, max 7)",
+            "critical": true
+          },
+          {
+            "name": "initial_claims",
+            "label": "Initial Jobless Claims",
+            "series": "ICSA",
+            "status": "stale",
+            "value": 213000.0,
+            "date": "2026-02-28",
+            "age_days": 7,
+            "max_age_days": 2,
+            "message": "Initial Jobless Claims stale (7 days old, max 2)",
+            "critical": true
+          },
+          {
+            "name": "ism_svc_employment",
+            "label": "ISM Services Employment",
+            "series": "NMFBSI",
+            "status": "failed",
+            "value": null,
+            "date": null,
+            "age_days": null,
+            "max_age_days": 7,
+            "message": "ISM Services Employment: fetch error \u2014 HTTP Error 400: Bad Request",
+            "critical": true
+          },
+          {
+            "name": "continued_claims",
+            "label": "Continued Claims",
+            "series": "CCSA",
+            "status": "stale",
+            "value": 1868000.0,
+            "date": "2026-02-21",
+            "age_days": 14,
+            "max_age_days": 2,
+            "message": "Continued Claims stale (14 days old, max 2)",
+            "critical": false
+          },
+          {
+            "name": "ism_mfg_employment",
+            "label": "ISM Mfg Employment",
+            "series": "NAPMEI",
+            "status": "failed",
+            "value": null,
+            "date": null,
+            "age_days": null,
+            "max_age_days": 7,
+            "message": "ISM Mfg Employment: fetch error \u2014 HTTP Error 400: Bad Request",
+            "critical": false
+          },
+          {
+            "name": "temp_help",
+            "label": "Temp Help Services",
+            "series": "TEMPHELPS",
+            "status": "stale",
+            "value": 2447.4,
+            "date": "2026-02-01",
+            "age_days": 34,
+            "max_age_days": 7,
+            "message": "Temp Help Services stale (34 days old, max 7)",
+            "critical": false
+          },
+          {
+            "name": "consumer_confidence",
+            "label": "Consumer Confidence",
+            "series": "CSCICP03USM665S",
+            "status": "stale",
+            "value": 98.91297,
+            "date": "2024-01-01",
+            "age_days": 796,
+            "max_age_days": 7,
+            "message": "Consumer Confidence stale (796 days old, max 7)",
+            "critical": false
+          },
+          {
+            "name": "michigan_sentiment",
+            "label": "UMich Sentiment",
+            "series": "UMCSENT",
+            "status": "stale",
+            "value": 56.4,
+            "date": "2026-01-01",
+            "age_days": 65,
+            "max_age_days": 7,
+            "message": "UMich Sentiment stale (65 days old, max 7)",
+            "critical": false
+          },
+          {
+            "name": "challenger_cuts",
+            "label": "Challenger Cuts",
+            "series": "ICNSA",
+            "status": "ok",
+            "value": 213090.0,
+            "date": "2026-02-28",
+            "age_days": 7,
+            "max_age_days": 7,
+            "message": "Challenger Cuts: OK (value=213090.0, 7d old)",
+            "critical": false
+          }
+        ],
+        "blocked_reasons": [
+          "DATA GATE: NFP model blocked \u2014 ADP Employment stale (1406 days old, max 7)",
+          "DATA GATE: NFP model blocked \u2014 Initial Jobless Claims stale (7 days old, max 2)",
+          "DATA GATE: NFP model blocked \u2014 ISM Services Employment: fetch error \u2014 HTTP Error 400: Bad Request"
+        ],
+        "summary": "DATA GATE: NFP \u2014 1/9 features OK \u2014 BLOCKED: DATA GATE: NFP model blocked \u2014 ADP Employment stale (1406 days old, max 7); DATA GATE: NFP model blocked \u2014 Initial Jobless Claims stale (7 days old, max 2); DATA GATE: NFP model blocked \u2014 ISM Services Employment: fetch error \u2014 HTTP Error 400: Bad Request"
+      }
+    },
+    "signals": [],
+    "signal_count": 0,
+    "actionable_count": 0
+  },
+  {
+    "timestamp": "2026-03-07T17:24:09.976827-05:00",
+    "model": "nfp",
+    "raw_features": {
+      "adp_level": 132333000.0,
+      "adp_change": 63.0,
+      "adp_date": "2026-02-01",
+      "claims_4wk_avg": 215750,
+      "claims_latest": 213000.0,
+      "continued_claims": 1868000.0,
+      "continued_claims_change": 46000.0,
+      "regional_fed_mfg": 11.7,
+      "temp_help": 2447.4,
+      "temp_help_change": -6.5,
+      "consumer_confidence": 60.68322
+    },
+    "intermediate_values": {
+      "nfp_estimate_k": 132,
+      "confidence": 0.71,
+      "data_quality": {
+        "passed": true,
+        "report": [
+          {
+            "name": "adp",
+            "label": "ADP Employment",
+            "series": "ADPMNUSNERSA",
+            "status": "ok",
+            "value": 132333000.0,
+            "date": "2026-02-01",
+            "age_days": 34,
+            "max_age_days": 45,
+            "message": "ADP Employment: OK (value=132333000.0, 34d old)",
+            "critical": true
+          },
+          {
+            "name": "initial_claims",
+            "label": "Initial Jobless Claims",
+            "series": "ICSA",
+            "status": "ok",
+            "value": 213000.0,
+            "date": "2026-02-28",
+            "age_days": 7,
+            "max_age_days": 10,
+            "message": "Initial Jobless Claims: OK (value=213000.0, 7d old)",
+            "critical": true
+          },
+          {
+            "name": "continued_claims",
+            "label": "Continued Claims",
+            "series": "CCSA",
+            "status": "stale",
+            "value": 1868000.0,
+            "date": "2026-02-21",
+            "age_days": 14,
+            "max_age_days": 10,
+            "message": "Continued Claims stale (14 days old, max 10)",
+            "critical": false
+          },
+          {
+            "name": "regional_fed_empire",
+            "label": "Empire State Mfg",
+            "series": "GACDISA066MSFRBNY",
+            "status": "ok",
+            "value": 7.1,
+            "date": "2026-02-01",
+            "age_days": 34,
+            "max_age_days": 45,
+            "message": "Empire State Mfg: OK (value=7.1, 34d old)",
+            "critical": false
+          },
+          {
+            "name": "regional_fed_philly",
+            "label": "Philly Fed Mfg",
+            "series": "GACDFSA066MSFRBPHI",
+            "status": "ok",
+            "value": 16.3,
+            "date": "2026-02-01",
+            "age_days": 34,
+            "max_age_days": 45,
+            "message": "Philly Fed Mfg: OK (value=16.3, 34d old)",
+            "critical": false
+          },
+          {
+            "name": "temp_help",
+            "label": "Temp Help Services",
+            "series": "TEMPHELPS",
+            "status": "ok",
+            "value": 2447.4,
+            "date": "2026-02-01",
+            "age_days": 34,
+            "max_age_days": 45,
+            "message": "Temp Help Services: OK (value=2447.4, 34d old)",
+            "critical": false
+          },
+          {
+            "name": "consumer_confidence",
+            "label": "Consumer Confidence (OECD)",
+            "series": "USACSCICP02STSAM",
+            "status": "stale",
+            "value": 60.68322,
+            "date": "2026-01-01",
+            "age_days": 65,
+            "max_age_days": 45,
+            "message": "Consumer Confidence (OECD) stale (65 days old, max 45)",
+            "critical": false
+          }
+        ],
+        "blocked_reasons": [],
+        "summary": "DATA GATE: NFP \u2014 5/7 features OK \u2014 PASSED"
+      },
+      "bracket_selector": false,
+      "fallback_blocked": true
+    },
+    "signals": [],
+    "signal_count": 0,
+    "actionable_count": 0
+  }
+]

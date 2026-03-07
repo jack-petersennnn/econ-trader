@@ -1,19 +1,25 @@
 """
-NFP (Non-Farm Payrolls) Prediction Model — 7-Source Ensemble
+NFP (Non-Farm Payrolls) Prediction Model — 6-Source Ensemble
 
-Estimates the upcoming jobs report using 7 leading indicators:
-1. ADP Employment Report (25%) — released 2 days before NFP (FRED: NPPTTL)
-2. Weekly Initial Jobless Claims (22%) — strong inverse correlation (FRED: ICSA)
-3. ISM Services Employment (18%) — services = 80% of jobs (FRED: NMFBSI)
-4. Continued Claims (12%) — lagging but informative (FRED: CCSA)
-5. Temporary Help Services (10%) — leading indicator (FRED: TEMPHELPS)
-6. ISM Manufacturing Employment (7%) — mfg = 10% of jobs (FRED: NAPMEI)
-7. Consumer Confidence (6%) — OECD composite (FRED: USACSCICP02STSAM)
-   Previously CSCICP03USM665S — stale/frozen since Jan 2024, no scheduled updates.
+Estimates the upcoming jobs report using 6 leading indicators:
+1. ADP Employment Report (30%) — released 2 days before NFP (FRED: ADPMNUSNERSA)
+2. Weekly Initial Jobless Claims (26%) — strong inverse correlation (FRED: ICSA)
+3. Continued Claims (15%) — lagging but informative (FRED: CCSA)
+4. Regional Fed Mfg Composite (10%) — avg of Empire State + Philly Fed diffusion
+   indexes (FRED: GACDISA066MSFRBNY, GACDFSA066MSFRBPHI). Released before NFP.
+5. Temporary Help Services (12%) — leading indicator (FRED: TEMPHELPS)
+6. Consumer Confidence (7%) — OECD composite (FRED: USACSCICP02STSAM)
 
 Removed (Mar 2026):
+  - ISM Manufacturing Employment: NAPMEI deleted from FRED in 2016 (ISM pulled all data)
+  - ISM Services Employment: NMFBSI also deleted from FRED in 2016
   - Challenger Job Cuts: was pulling ICNSA (wrong series), no FRED source exists
   - Michigan Sentiment: too weak a predictor to justify weight
+
+ISM note: ISM asked FRED to remove all 22 ISM series on June 24, 2016. Data is
+proprietary and not available via any free API. Regional Fed surveys are the best
+free alternative for manufacturing sentiment. No equivalent free services PMI exists,
+so we redistribute ISM Svc weight across remaining sources rather than use a bad proxy.
 
 Dynamic bracket selection via bracket_selector.py (consensus hybrid approach).
 """
@@ -35,18 +41,19 @@ logger = logging.getLogger(__name__)
 # Historical reliability weights (inverse MAE-based, normalized)
 # Higher = more reliable predictor of NFP
 #
-# Rebalanced Mar 2026:
-#   - Challenger removed (ICNSA was wrong series, no FRED source for actual data)
-#   - Michigan Sentiment removed (too weak, barely adds information)
-#   - Weight redistributed to claims + ISM services
+# Rebalanced Mar 2026 (v3):
+#   - ISM Mfg/Svc removed: FRED deleted all ISM data in 2016 (proprietary)
+#   - ISM Mfg replaced with Regional Fed composite (Empire State + Philly Fed avg)
+#   - ISM Svc weight redistributed — no free services PMI proxy exists
+#   - Challenger removed (wrong FRED series)
+#   - Michigan Sentiment removed (too weak)
 SOURCE_WEIGHTS = {
-    "adp":                 0.25,  # Best single predictor, R²~0.6
-    "initial_claims":      0.22,  # Strong inverse correlation
-    "continued_claims":    0.12,  # Lagging but informative
-    "ism_mfg_employment":  0.07,  # Manufacturing only ~10% of jobs
-    "ism_svc_employment":  0.18,  # Services ~80% of jobs, very useful
-    "temp_help":           0.10,  # Leading indicator of hiring/firing
-    "consumer_confidence":  0.06,  # Indirect but correlated
+    "adp":                 0.30,  # Best single predictor, R²~0.6
+    "initial_claims":      0.26,  # Strong inverse correlation
+    "continued_claims":    0.15,  # Lagging but informative
+    "regional_fed_mfg":    0.10,  # Empire State + Philly Fed avg (diffusion, pre-NFP)
+    "temp_help":           0.12,  # Leading indicator of hiring/firing
+    "consumer_confidence":  0.07,  # Indirect but correlated
 }
 
 
@@ -191,41 +198,40 @@ class NFPModel(BaseModel):
             estimate["sources_failed"] += 1
             estimate["reasoning"].append("❌ Continued Claims: unavailable")
 
-        # ── 4. ISM Manufacturing Employment ──
-        ism_mfg = self._fetch_source("ISM Mfg Employment", "NAPMEI", limit=3)
-        if ism_mfg:
-            mfg_val = ism_mfg[0]["value"]
-            estimate["components"]["ism_mfg_employment"] = mfg_val
-            # ISM 50 = neutral. Manufacturing is ~10% of jobs (~15K/mo typical)
-            # Each point above 50 ≈ 3K manufacturing jobs; scale to total NFP
-            mfg_est = 150 + (mfg_val - 50) * 15
-            estimate["source_estimates"]["ism_mfg_employment"] = {
-                "estimate_k": mfg_est,
-                "weight": SOURCE_WEIGHTS["ism_mfg_employment"],
-                "detail": f"ISM Mfg Emp {mfg_val:.1f} → est {mfg_est:+,.0f}K",
+        # ── 4. Regional Fed Manufacturing Composite ──
+        # Replaces ISM Mfg (NAPMEI deleted from FRED 2016) + absorbs ISM Svc weight
+        # Empire State (NY Fed) + Philly Fed: diffusion indexes centered at 0
+        # Both released mid-month, before NFP Friday
+        empire = self._fetch_source("Empire State Mfg", "GACDISA066MSFRBNY", limit=3)
+        philly = self._fetch_source("Philly Fed Mfg", "GACDFSA066MSFRBPHI", limit=3)
+        fed_vals = []
+        if empire:
+            fed_vals.append(empire[0]["value"])
+        if philly:
+            fed_vals.append(philly[0]["value"])
+        if fed_vals:
+            fed_avg = sum(fed_vals) / len(fed_vals)
+            estimate["components"]["regional_fed_mfg"] = fed_avg
+            # These center at 0 (not 50 like ISM). Positive = expansion.
+            # Empirically: each point above 0 ≈ 5K total NFP impact
+            # Baseline 150K + directional signal
+            fed_est = 150 + fed_avg * 5
+            fed_detail = f"Regional Fed avg {fed_avg:.1f}"
+            if len(fed_vals) == 2:
+                fed_detail += f" (Empire {fed_vals[0]:.1f}, Philly {fed_vals[1]:.1f})"
+            elif empire:
+                fed_detail += " (Empire only)"
+            else:
+                fed_detail += " (Philly only)"
+            estimate["source_estimates"]["regional_fed_mfg"] = {
+                "estimate_k": fed_est,
+                "weight": SOURCE_WEIGHTS["regional_fed_mfg"],
+                "detail": f"{fed_detail} → est {fed_est:+,.0f}K",
             }
-            estimate["reasoning"].append(f"✅ ISM Mfg Employment: {mfg_val:.1f} → {mfg_est:+,.0f}K")
+            estimate["reasoning"].append(f"✅ Regional Fed Mfg: {fed_detail} → {fed_est:+,.0f}K")
         else:
             estimate["sources_failed"] += 1
-            estimate["reasoning"].append("❌ ISM Mfg Employment: unavailable")
-
-        # ── 5. ISM Services Employment ──
-        ism_svc = self._fetch_source("ISM Services Employment", "NMFBSI", limit=3)
-        if ism_svc:
-            svc_val = ism_svc[0]["value"]
-            estimate["components"]["ism_svc_employment"] = svc_val
-            # Services = ~80% of employment. Much more predictive than manufacturing.
-            # Each point above 50 ≈ 20K total NFP
-            svc_est = 150 + (svc_val - 50) * 20
-            estimate["source_estimates"]["ism_svc_employment"] = {
-                "estimate_k": svc_est,
-                "weight": SOURCE_WEIGHTS["ism_svc_employment"],
-                "detail": f"ISM Svc Emp {svc_val:.1f} → est {svc_est:+,.0f}K",
-            }
-            estimate["reasoning"].append(f"✅ ISM Services Employment: {svc_val:.1f} → {svc_est:+,.0f}K")
-        else:
-            estimate["sources_failed"] += 1
-            estimate["reasoning"].append("❌ ISM Services Employment: unavailable")
+            estimate["reasoning"].append("❌ Regional Fed Mfg: unavailable (both Empire State & Philly Fed failed)")
 
         # ── 6. Temporary Help Services (leading indicator) ──
         temp_data = self._fetch_source("Temp Help Services", "TEMPHELPS", limit=4)
@@ -275,12 +281,12 @@ class NFPModel(BaseModel):
         # ── 9. Challenger Job Cuts — REMOVED (Mar 2026) ──
         # Was pulling ICNSA (insured unemployment claims) and mislabeling as Challenger data.
         # Actual Challenger, Gray & Christmas data has no standard FRED series.
-        # Weight redistributed to initial_claims and ism_svc_employment.
+        # Weight redistributed to remaining sources.
         estimate["reasoning"].append("ℹ️ Challenger Cuts: removed (wrong FRED series)")
 
         # ── Ensemble ──
         # ── Minimum sources gate ──
-        MIN_SOURCES = 5  # Require at least 5 of 7 sources with fresh data
+        MIN_SOURCES = 4  # Require at least 4 of 6 sources with fresh data
         sources = estimate["source_estimates"]
         estimate["sources_used"] = len(sources)
 
