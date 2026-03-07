@@ -61,12 +61,40 @@ class NFPModel(BaseModel):
     def get_relevant_markets(self, all_markets: list[dict]) -> list[dict]:
         return [m for m in all_markets if m.get("category") == "nfp"]
 
-    def _fetch_source(self, name: str, series_id: str, limit: int = 6) -> Optional[list]:
-        """Safely fetch a FRED series, returning None on failure."""
+    def _fetch_source(self, name: str, series_id: str, limit: int = 6,
+                       max_age_days: int = 60) -> Optional[list]:
+        """Safely fetch a FRED series with staleness guard.
+        
+        Returns None (and logs warning) if:
+        - API call fails
+        - Series returns no data
+        - Most recent observation is older than max_age_days
+        """
         try:
             data = self.fred.get_series(series_id, limit=limit)
-            if data:
-                return data
+            if not data:
+                logger.warning(f"{name} ({series_id}): no data returned")
+                return None
+            
+            # Staleness guard: reject data older than max_age_days
+            latest_date_str = data[0].get("date", "")
+            if latest_date_str:
+                try:
+                    from datetime import datetime, date
+                    latest_date = datetime.strptime(latest_date_str, "%Y-%m-%d").date()
+                    age_days = (date.today() - latest_date).days
+                    if age_days > max_age_days:
+                        logger.warning(
+                            f"{name} ({series_id}): STALE DATA — latest obs {latest_date_str} "
+                            f"is {age_days} days old (max {max_age_days}). "
+                            f"Series may be discontinued. Rejecting."
+                        )
+                        return None
+                except (ValueError, TypeError):
+                    pass  # Can't parse date — let it through with a warning
+                    logger.warning(f"{name} ({series_id}): could not parse date '{latest_date_str}'")
+            
+            return data
         except Exception as e:
             logger.warning(f"Failed to fetch {name} ({series_id}): {e}")
         return None
@@ -88,11 +116,17 @@ class NFPModel(BaseModel):
         }
 
         # ── 1. ADP Employment ──
-        adp_data = self._fetch_source("ADP Employment", "NPPTTL", limit=3)
+        # ADPMNUSNERSA = Total Nonfarm Private Payroll Employment (level, thousands)
+        # Previously used NPPTTL which was DISCONTINUED May 2022 — caused phantom data bug.
+        # We compute month-over-month change from the level series.
+        adp_data = self._fetch_source("ADP Employment", "ADPMNUSNERSA", limit=3)
         if adp_data and len(adp_data) >= 2:
             adp_latest = adp_data[0]["value"]
             adp_prev = adp_data[1]["value"]
-            adp_change = adp_latest - adp_prev
+            # ADPMNUSNERSA is in raw persons (e.g., 132333000 = 132.333M employees)
+            # MoM change needs /1000 to convert to "thousands" (K) for the ensemble
+            # e.g., 63000 raw change → 63K jobs added
+            adp_change = (adp_latest - adp_prev) / 1000
             # Use ADP change directly — fixed 1.1x multiplier was adding noise.
             # ADP-vs-NFP bias varies wildly month to month (+100K to -100K).
             # TODO: rolling 6-month bias correction when we have enough data.
@@ -242,8 +276,18 @@ class NFPModel(BaseModel):
         estimate["reasoning"].append("ℹ️ Challenger Cuts: removed (wrong FRED series)")
 
         # ── Ensemble ──
+        # ── Minimum sources gate ──
+        MIN_SOURCES = 4  # Require at least 4 of 7 sources with fresh data
         sources = estimate["source_estimates"]
         estimate["sources_used"] = len(sources)
+
+        if len(sources) < MIN_SOURCES:
+            estimate["reasoning"].append(
+                f"🚫 DEGRADED: only {len(sources)}/{len(SOURCE_WEIGHTS)} sources available "
+                f"(minimum {MIN_SOURCES}). Model output unreliable — widening sigma 2x and "
+                f"capping confidence at 0.40."
+            )
+            estimate["degraded"] = True
 
         if sources:
             # Normalize weights for available sources
