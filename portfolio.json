@@ -1,10 +1,11 @@
 {
   "bankroll": 500.0,
-  "cash": 105.53,
+  "cash": 500.0,
   "positions": [],
   "closed_trades": [],
   "total_pnl": 0.0,
-  "total_trades": 15,
+  "total_trades": 0,
   "win_rate": 0.0,
-  "last_updated": "2026-02-18T10:03:11.135156-05:00"
+  "last_updated": "2026-03-07T17:37:00-05:00",
+  "_reset_note": "Clean reset Mar 7 2026. Previous 15 trades were on hallucinating model (dead ADP/ISM series). Old file preserved as portfolio.json.pre-crisis-backup. $394.47 was unreconcilable."
 }

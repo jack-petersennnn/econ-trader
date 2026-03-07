@@ -615,7 +615,7 @@ if __name__ == "__main__":
     print()
 
     model = NFPModel()
-    print("  📊 Computing NFP estimate from 9 sources...\n")
+    print("  📊 Computing NFP estimate from 6 sources...\n")
     estimate = model._compute_nfp_estimate()
     for line in estimate["reasoning"]:
         print(f"    {line}")

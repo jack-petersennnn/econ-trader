@@ -12,9 +12,14 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 # Staleness thresholds
-MAX_STALE_MONTHLY = 45  # days - monthly indicators can be 30-40 days old legitimately
-MAX_STALE_WEEKLY = 10   # days - for weekly indicators
+MAX_STALE_MONTHLY = 50  # days - monthly indicators can be 30-45 days old legitimately
+MAX_STALE_WEEKLY = 21   # days - weekly series with ~2 week publication lag (e.g. CCSA)
 MAX_STALE_DAILY = 3     # days - for daily indicators
+
+# Per-series overrides (some OECD series have longer publication lags)
+STALENESS_OVERRIDES = {
+    "USACSCICP02STSAM": 90,  # OECD Consumer Confidence — publishes with 60-90 day lag
+}
 
 # Critical features per model - if ANY critical feature fails, NO TRADE
 CRITICAL_FEATURES = {
@@ -59,7 +64,10 @@ OPTIONAL_FEATURES = {
 }
 
 
-def _max_age_days(frequency: str) -> int:
+def _max_age_days(frequency: str, series_id: str = None) -> int:
+    """Get max staleness in days, with per-series overrides."""
+    if series_id and series_id in STALENESS_OVERRIDES:
+        return STALENESS_OVERRIDES[series_id]
     if frequency == "daily":
         return MAX_STALE_DAILY
     elif frequency == "weekly":
@@ -76,7 +84,7 @@ def check_feature(fred_client, feature_name: str, feature_config: dict) -> dict:
     series_id = feature_config.get("series")
     label = feature_config.get("label", feature_name)
     frequency = feature_config.get("frequency", "monthly")
-    max_age = _max_age_days(frequency)
+    max_age = _max_age_days(frequency, series_id)
 
     result = {
         "name": feature_name,
