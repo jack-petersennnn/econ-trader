@@ -8,7 +8,8 @@ Estimates the upcoming jobs report using 7 leading indicators:
 4. Continued Claims (12%) — lagging but informative (FRED: CCSA)
 5. Temporary Help Services (10%) — leading indicator (FRED: TEMPHELPS)
 6. ISM Manufacturing Employment (7%) — mfg = 10% of jobs (FRED: NAPMEI)
-7. Conference Board Consumer Confidence (6%) — indirect (FRED: CSCICP03USM665S)
+7. Consumer Confidence (6%) — OECD composite (FRED: USACSCICP02STSAM)
+   Previously CSCICP03USM665S — stale/frozen since Jan 2024, no scheduled updates.
 
 Removed (Mar 2026):
   - Challenger Job Cuts: was pulling ICNSA (wrong series), no FRED source exists
@@ -246,8 +247,10 @@ class NFPModel(BaseModel):
             estimate["sources_failed"] += 1
             estimate["reasoning"].append("❌ Temp Help Services: unavailable")
 
-        # ── 7. Conference Board Consumer Confidence ──
-        cc_conf = self._fetch_source("Consumer Confidence", "CSCICP03USM665S", limit=3)
+        # ── 7. Consumer Confidence (OECD Composite) ──
+        # Replaced CSCICP03USM665S (stale/frozen since Jan 2024) with USACSCICP02STSAM
+        # OECD publishes with ~2 month lag, so allow 90 days
+        cc_conf = self._fetch_source("Consumer Confidence", "USACSCICP02STSAM", limit=3, max_age_days=90)
         if cc_conf and len(cc_conf) >= 2:
             conf_latest = cc_conf[0]["value"]
             conf_prev = cc_conf[1]["value"]
@@ -277,15 +280,14 @@ class NFPModel(BaseModel):
 
         # ── Ensemble ──
         # ── Minimum sources gate ──
-        MIN_SOURCES = 4  # Require at least 4 of 7 sources with fresh data
+        MIN_SOURCES = 5  # Require at least 5 of 7 sources with fresh data
         sources = estimate["source_estimates"]
         estimate["sources_used"] = len(sources)
 
         if len(sources) < MIN_SOURCES:
             estimate["reasoning"].append(
                 f"🚫 DEGRADED: only {len(sources)}/{len(SOURCE_WEIGHTS)} sources available "
-                f"(minimum {MIN_SOURCES}). Model output unreliable — widening sigma 2x and "
-                f"capping confidence at 0.40."
+                f"(minimum {MIN_SOURCES}). Model should NOT trade — insufficient signal diversity."
             )
             estimate["degraded"] = True
 
