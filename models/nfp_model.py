@@ -304,6 +304,19 @@ class NFPModel(BaseModel):
                 s["estimate_k"] * s["weight"] / total_weight
                 for s in sources.values()
             )
+
+            # Log normalized weights (shows redistribution when sources drop)
+            if len(sources) < len(SOURCE_WEIGHTS):
+                missing = set(SOURCE_WEIGHTS.keys()) - set(sources.keys())
+                redistrib_pct = sum(SOURCE_WEIGHTS[m] for m in missing) * 100
+                estimate["reasoning"].append(
+                    f"⚠️ Weight redistribution: {redistrib_pct:.0f}% from missing "
+                    f"source(s) [{', '.join(missing)}] spread across {len(sources)} active sources"
+                )
+            estimate["normalized_weights"] = {
+                name: round(src["weight"] / total_weight, 4)
+                for name, src in sources.items()
+            }
             estimate["nfp_estimate_k"] = round(nfp_est)
 
             # Confidence: more sources = higher confidence, max ~0.85

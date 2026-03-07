@@ -1,0 +1,26 @@
+{
+  "version": "v2_live_only",
+  "created": "2026-03-07",
+  "description": "6-source ensemble after purging all dead/proprietary series. All sources FRED-native and verified live.",
+  "changes": [
+    "ADP: NPPTTL (dead 2022) -> ADPMNUSNERSA (live)",
+    "Consumer Confidence: CSCICP03USM665S (stale 2024) -> USACSCICP02STSAM (live, 90d staleness)",
+    "ISM Mfg: NAPMEI (deleted from FRED 2016) -> Regional Fed composite (Empire State + Philly Fed avg)",
+    "ISM Svc: NMFBSI (deleted from FRED 2016) -> REMOVED, weight redistributed",
+    "Challenger: REMOVED (wrong FRED series)",
+    "Michigan Sentiment: REMOVED (too weak)"
+  ],
+  "sources": {
+    "adp": {"series": "ADPMNUSNERSA", "weight": 0.30, "frequency": "monthly"},
+    "initial_claims": {"series": "ICSA", "weight": 0.26, "frequency": "weekly"},
+    "continued_claims": {"series": "CCSA", "weight": 0.15, "frequency": "weekly"},
+    "regional_fed_mfg": {"series": ["GACDISA066MSFRBNY", "GACDFSA066MSFRBPHI"], "weight": 0.10, "frequency": "monthly"},
+    "temp_help": {"series": "TEMPHELPS", "weight": 0.12, "frequency": "monthly"},
+    "consumer_confidence": {"series": "USACSCICP02STSAM", "weight": 0.07, "frequency": "monthly", "max_age_days": 90}
+  },
+  "min_sources": 4,
+  "total_sources": 6,
+  "kelly_fraction": 0.20,
+  "dynamic_sigma": {"with_adp": 55, "without_adp": 90},
+  "baseline_estimate_k": 150
+}
