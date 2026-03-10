@@ -1,0 +1,110 @@
+{
+  "bankroll": 500.0,
+  "min_confidence": 0.45,
+  "min_edge": 0.03,
+  "watchlist_min_edge": 0.01,
+  "max_position_pct": 0.1,
+  "fee_rate": 0.07,
+  "kelly_fraction_multiplier": 0.2,
+  "max_trade_size": 25.0,
+  "max_portfolio_exposure": 0.3,
+  "max_event_exposure_pct": 0.2,
+  "min_trade_size": 5.0,
+  "paper_trading": true,
+  "timezone": "US/Eastern",
+  "fred_api_key": "YOUR_FRED_API_KEY",
+  "kalshi_base_url": "https://api.elections.kalshi.com/trade-api/v2",
+  "key_dates": {
+    "next_cpi": "2026-03-12",
+    "next_nfp": "2026-04-04",
+    "next_fomc": "2026-03-18"
+  },
+  "next_nfp_consensus": 59000,
+  "allow_legacy_fallback": false,
+  "bracket_selector": {
+    "min_volume": 150,
+    "max_spread_cents": 8,
+    "min_ev_cents": 5,
+    "min_edge": 0.03,
+    "max_candidates": 1
+  },
+  "market_keywords": {
+    "cpi": [
+      "cpi",
+      "consumer price index",
+      "inflation"
+    ],
+    "nfp": [
+      "nonfarm",
+      "non-farm",
+      "payroll",
+      "jobs report",
+      "employment change"
+    ],
+    "fed": [
+      "fed funds",
+      "federal reserve",
+      "interest rate",
+      "fomc",
+      "rate decision"
+    ],
+    "gdp": [
+      "gdp",
+      "gross domestic product"
+    ],
+    "ppi": [
+      "ppi",
+      "producer price"
+    ]
+  },
+  "fred_series": {
+    "ppi": "PPIACO",
+    "shelter": "CUSR0000SAH1",
+    "jobless_claims": "ICSA",
+    "regional_fed_empire": "GACDISA066MSFRBNY",
+    "regional_fed_philly": "GACDFSA066MSFRBPHI",
+    "adp": "ADPMNUSNERSA",
+    "cpi_all": "CPIAUCSL",
+    "fed_funds": "FEDFUNDS",
+    "fed_funds_target_upper": "DFEDTARU",
+    "fed_funds_target_lower": "DFEDTARL",
+    "breakeven_5y": "T5YIE",
+    "breakeven_10y": "T10YIE",
+    "cpi_core": "CPILFESL"
+  },
+  "model_overrides": {
+    "nfp": {
+      "enabled": true,
+      "min_confidence": 0.45,
+      "min_edge": 0.03,
+      "notes": "6-source ensemble, 55-65% realistic WR. Dynamic bracket selector."
+    },
+    "fed": {
+      "enabled": false,
+      "min_confidence": 0.75,
+      "min_edge": 0.08,
+      "notes": "Disabled \u2014 62.5% WR but -$265 P&L in backtest. Researching better correlations."
+    },
+    "cpi": {
+      "enabled": false,
+      "min_confidence": 0.5,
+      "min_edge": 0.03,
+      "notes": "Disabled \u2014 41.7% WR, -$217.50 P&L in backtest. Researching better correlations."
+    }
+  },
+  "bls_api_key": "YOUR_BLS_API_KEY",
+  "nasdaq_api_key": "YOUR_NASDAQ_API_KEY",
+  "nfp_results": {
+    "2026-03-06": {
+      "report_month": "February 2026",
+      "actual": -92000,
+      "consensus": 59000,
+      "previous": 126000,
+      "previous_revised_from": 130000,
+      "unemployment_rate": 4.4,
+      "avg_hourly_earnings_mom": 0.4,
+      "avg_hourly_earnings_yoy": 3.8,
+      "notes": "Massive miss. Kaiser Permanente strike (-31K healthcare), winter storm, federal govt layoffs (-10K). 6th decline since Jan 2025."
+    }
+  }
+}
